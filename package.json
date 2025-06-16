@@ -5,12 +5,20 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "NODE_ENV=development node src/index.js"
+    "dev": "NODE_ENV=development node src/index.js",
+    "deploy": "pm2 start ecosystem.config.js",
+    "deploy:prod": "pm2 start ecosystem.config.js --env production",
+    "stop": "pm2 stop discord-to-telegram",
+    "restart": "pm2 restart discord-to-telegram",
+    "logs": "pm2 logs discord-to-telegram",
+    "status": "pm2 status discord-to-telegram",
+    "monitor": "pm2 monit discord-to-telegram"
   },
   "dependencies": {
     "axios": "^1.10.0",
     "discord.js-selfbot-v13": "^3.6.1",
     "dotenv": "^16.5.0",
+    "pm2": "^5.3.1",
     "socks-proxy-agent": "^8.0.2"
   },
   "devDependencies": {
