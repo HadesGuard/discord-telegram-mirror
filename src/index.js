@@ -98,13 +98,7 @@ client.on('ready', async () => {
 
 client.on('messageCreate', async (message) => {
     try {
-        // Ignore messages from the bot channel
-        if (message.channel.name === config.botChannelName) {
-            return;
-        }
-        
-
-        if (!message.author.bot && message.channel.id === config.channelId) {
+        if (message.channel.id === config.channelId) {
             const formattedMessage = formatMessage(message);
             await sendToTelegram(formattedMessage);
         }
