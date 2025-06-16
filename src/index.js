@@ -22,20 +22,22 @@ const config = {
     discordToken: process.env.DISCORD_TOKEN,
     channelId: process.env.DISCORD_CHANNEL_ID,
     telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
-    telegramChatId: process.env.TELEGRAM_CHAT_ID,
+    telegramChannelId: process.env.TELEGRAM_CHANNEL_ID,
     isDev: process.env.NODE_ENV === 'development',
-    socksProxy: process.env.SOCKS_PROXY
+    socksProxy: process.env.SOCKS_PROXY,
+    botChannelName: 'discord-to-telegram'
 };
 
 // Validate configuration
 function validateConfig() {
-    const required = ['discordToken', 'channelId', 'telegramBotToken', 'telegramChatId'];
+    const required = ['discordToken', 'channelId', 'telegramBotToken', 'telegramChannelId'];
     const missing = required.filter(key => !config[key]);
     
     if (missing.length > 0) {
         throw new Error(`Missing required configuration: ${missing.join(', ')}`);
     }
 }
+
 
 // Create axios instance with SOCKS5 proxy if in dev mode
 const axiosInstance = axios.create();
@@ -51,7 +53,7 @@ async function sendToTelegram(content) {
         const response = await axiosInstance.post(
             `https://api.telegram.org/bot${config.telegramBotToken}/sendMessage`,
             {
-                chat_id: config.telegramChatId,
+                chat_id: config.telegramChannelId,
                 text: content,
                 parse_mode: 'HTML'
             },
@@ -73,17 +75,19 @@ async function sendToTelegram(content) {
 function formatMessage(message) {
     const author = message.author.username;
     const content = message.content;
+    const channelName = message.channel.name;
     const attachments = message.attachments.size > 0 
         ? `\nAttachments: ${Array.from(message.attachments.values()).map(a => a.url).join(', ')}`
         : '';
     
-    return `<b>[Discord] ${author}:</b>\n${content}${attachments}`;
+    return `<b>[Discord] #${channelName} | ${author}:</b>\n${content}${attachments}`;
 }
 
 // Event handlers
-client.on('ready', () => {
+client.on('ready', async () => {
     console.log(`Logged in as ${client.user.username}`);
     console.log('Bot is ready to forward messages!');
+
     if (config.isDev) {
         console.log('Running in development mode');
         if (config.socksProxy) {
@@ -94,7 +98,12 @@ client.on('ready', () => {
 
 client.on('messageCreate', async (message) => {
     try {
-        if (message.channel.id === config.channelId && !message.author.bot) {
+        // Ignore messages from the bot channel
+        if (message.channel.name === config.botChannelName) {
+            return;
+        }
+
+        if (!message.author.bot) {
             const formattedMessage = formatMessage(message);
             await sendToTelegram(formattedMessage);
         }
