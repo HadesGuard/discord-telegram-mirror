@@ -74,7 +74,7 @@ async function sendToTelegram(content) {
 // Format Discord message
 function formatMessage(message) {
     const author = message.author.username;
-    const content = message.content;
+    const content = message.content.replace(/<#(\d+)>/g, 'channel'); // Replace Discord channel mentions
     const channelName = message.channel.name;
     const attachments = message.attachments.size > 0 
         ? `\nAttachments: ${Array.from(message.attachments.values()).map(a => a.url).join(', ')}`
