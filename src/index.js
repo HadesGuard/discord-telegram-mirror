@@ -99,8 +99,29 @@ client.on('ready', async () => {
 client.on('messageCreate', async (message) => {
     try {
         if (message.channel.id === config.channelId) {
-            const formattedMessage = formatMessage(message);
-            await sendToTelegram(formattedMessage);
+            // Chỉ forward embed thông báo start game
+            if (
+                message.embeds.length > 0 &&
+                message.embeds[0].title &&
+                message.embeds[0].title.startsWith('Rumble Royale hosted by')
+            ) {
+                const embed = message.embeds[0];
+                let formattedMessage = '';
+                formattedMessage += embed.title ? `${embed.title}\n` : '';
+                formattedMessage += embed.description ? `${embed.description}\n` : '';
+                if (embed.fields && embed.fields.length > 0) {
+                    embed.fields.forEach(field => {
+                        formattedMessage += `${field.name}: ${field.value}\n`;
+                    });
+                }
+                await sendToTelegram(formattedMessage.trim());
+            }
+            // Forward message thường (không phải embed)
+            else if (message.embeds.length === 0) {
+                const formattedMessage = formatMessage(message);
+                await sendToTelegram(formattedMessage);
+            }
+            // Các embed khác sẽ bị bỏ qua
         }
     } catch (error) {
         console.error('Error processing message:', error);
