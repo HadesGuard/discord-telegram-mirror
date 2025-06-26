@@ -29,6 +29,65 @@ for (let i = 1; i <= numAccounts; i++) {
 
 console.log(`Loaded ${accounts.length} accounts for auto-reacting`);
 
+// Realistic device configurations
+const deviceConfigs = [
+    {
+        browser: 'Chrome',
+        os: 'Windows',
+        device: '',
+        browser_user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        browser_version: '120.0.0.0',
+        os_version: '10',
+        screen_width: 1920,
+        screen_height: 1080
+    },
+    {
+        browser: 'Firefox',
+        os: 'Windows',
+        device: '',
+        browser_user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+        browser_version: '121.0',
+        os_version: '10',
+        screen_width: 1366,
+        screen_height: 768
+    },
+    {
+        browser: 'Chrome',
+        os: 'Mac OS X',
+        device: '',
+        browser_user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        browser_version: '120.0.0.0',
+        os_version: '10.15.7',
+        screen_width: 2560,
+        screen_height: 1440
+    },
+    {
+        browser: 'Safari',
+        os: 'Mac OS X',
+        device: '',
+        browser_user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
+        browser_version: '17.1',
+        os_version: '10.15.7',
+        screen_width: 1440,
+        screen_height: 900
+    },
+    {
+        browser: 'Chrome',
+        os: 'Linux',
+        device: '',
+        browser_user_agent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        browser_version: '120.0.0.0',
+        os_version: '',
+        screen_width: 1920,
+        screen_height: 1080
+    }
+];
+
+// Function to get random device config
+function getRandomDeviceConfig() {
+    return deviceConfigs[Math.floor(Math.random() * deviceConfigs.length)];
+}
+
 // Function to create proxy agent based on proxy URL
 function createProxyAgent(proxyUrl) {
     if (!proxyUrl) return null;
@@ -83,10 +142,19 @@ async function addAutoReact(message, accountConfig, client) {
     if (!isGameMessage) return;
     
     try {
-        // Add random delay to make it more natural and avoid conflicts
-        const delay = Math.floor(Math.random() * (accountConfig.autoReact.delayMax - accountConfig.autoReact.delayMin + 1)) + accountConfig.autoReact.delayMin;
+        // Add human-like random delay patterns
+        let delay = Math.floor(Math.random() * (accountConfig.autoReact.delayMax - accountConfig.autoReact.delayMin + 1)) + accountConfig.autoReact.delayMin;
+        
+        // Occasionally add extra delay to simulate human behavior (10% chance)
+        if (Math.random() < 0.1) {
+            const extraDelay = Math.floor(Math.random() * 3000) + 1000; // 1-4 seconds extra
+            delay += extraDelay;
+            console.log(`Account ${accountConfig.id}: Adding human-like extra delay (+${extraDelay}ms)`);
+        }
+        
         await new Promise(resolve => setTimeout(resolve, delay));
         console.log("delay", delay);
+        
         // React with the configured emoji
         await message.react(accountConfig.autoReact.emoji);
         console.log(`⚔️ Account ${accountConfig.id} (${client.user.username}) reacted with ${accountConfig.autoReact.emoji} (delay: ${delay}ms)`);
@@ -100,16 +168,27 @@ async function addAutoReact(message, accountConfig, client) {
 const clients = [];
 
 accounts.forEach((accountConfig, index) => {
-    // Create client options
+    // Get random device config for this account
+    const deviceConfig = getRandomDeviceConfig();
+    
+    // Create client options with realistic device fingerprinting
     const clientOptions = {
         checkUpdate: false,
         autoRedeemNitro: false,
         patchVoice: false,
         ws: {
             properties: {
-                browser: 'Discord Android',
-                os: 'Android',
-                device: 'Android'
+                browser: deviceConfig.browser,
+                browser_user_agent: deviceConfig.browser_user_agent,
+                browser_version: deviceConfig.browser_version,
+                os: deviceConfig.os,
+                os_version: deviceConfig.os_version,
+                device: deviceConfig.device,
+                system_locale: 'en-US',
+                browser_locale: 'en-US',
+                release_channel: 'stable',
+                client_build_number: Math.floor(Math.random() * 1000) + 200000, // Random build number
+                native_build_number: Math.floor(Math.random() * 1000) + 40000
             }
         }
     };
@@ -132,7 +211,7 @@ accounts.forEach((accountConfig, index) => {
     const client = new Client(clientOptions);
 
     client.on('ready', async () => {
-        console.log(`Account ${accountConfig.id}: Logged in as ${client.user.username}`);
+        console.log(`Account ${accountConfig.id}: Logged in as ${client.user.username} (${deviceConfig.browser} on ${deviceConfig.os})`);
         
         if (accountConfig.autoReact.enabled) {
             console.log(`⚔️ Account ${accountConfig.id} auto react enabled with emoji: ${accountConfig.autoReact.emoji}`);

@@ -146,6 +146,8 @@ npm run multi
 
 ### Features:
 - **Multiple accounts**: Each account reacts independently
+- **Realistic device fingerprinting**: Random browser/OS combinations (Chrome, Firefox, Safari on Windows/Mac/Linux)
+- **Human-like behavior**: Random delays with occasional extra pauses to simulate real users
 - **Different emojis**: Each account can use different reaction emojis
 - **Staggered delays**: Different delay ranges to avoid simultaneous reactions
 - **Multiple proxy types**: Supports HTTP, HTTPS, SOCKS4, and SOCKS5 proxies
@@ -162,6 +164,24 @@ npm run multi
 With authentication:
 - **HTTP with auth**: `http://username:password@proxy.example.com:8080`
 - **SOCKS5 with auth**: `socks5://username:password@proxy.example.com:1080`
+
+### Realistic Device Simulation:
+Each account automatically gets assigned a random, realistic device configuration:
+- **Browsers**: Chrome, Firefox, Safari
+- **Operating Systems**: Windows 10/11, macOS, Linux
+- **Screen Resolutions**: 1920x1080, 1366x768, 2560x1440, 1440x900
+- **User Agents**: Real browser user agent strings
+- **Build Numbers**: Randomized Discord client build numbers
+- **Human Behavior**: 10% chance of extra delay (1-4 seconds) to simulate human hesitation
+
+### Example Log Output:
+```
+Account 1: Logged in as User1 (Chrome on Windows)
+Account 2: Logged in as User2 (Firefox on Windows)
+Account 3: Logged in as User3 (Safari on Mac OS X)
+Account 1: Adding human-like extra delay (+2341ms)
+⚔️ Account 1 (User1) reacted with ⚔️ (delay: 3847ms)
+```
 
 ## Running the Bot
 
