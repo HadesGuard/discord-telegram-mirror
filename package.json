@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "NODE_ENV=development node src/index.js",
+    "auto-react": "node src/auto-react.js",
+    "auto-react:dev": "NODE_ENV=development node src/auto-react.js",
     "deploy": "pm2 start ecosystem.config.js",
     "deploy:prod": "pm2 start ecosystem.config.js --env production",
     "stop": "pm2 stop discord-to-telegram",

@@ -7,6 +7,7 @@ This bot forwards messages from a specific Discord channel to a Telegram chat. I
 - Forwards messages from a specific Discord channel to Telegram
 - Includes message author information
 - Handles message attachments
+- **Auto react** - automatically reacts to game-related messages with ⚔️ emoji
 - Error handling and logging
 - Environment-based configuration
 
@@ -30,6 +31,12 @@ This bot forwards messages from a specific Discord channel to a Telegram chat. I
    DISCORD_CHANNEL_ID=your_channel_id_here
    TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
    TELEGRAM_CHAT_ID=your_telegram_chat_id_here
+   
+   # Auto React Configuration (Optional)
+   AUTO_REACT_ENABLED=true
+   AUTO_REACT_EMOJI=⚔️
+   AUTO_REACT_DELAY_MIN=1000
+   AUTO_REACT_DELAY_MAX=3000
    ```
 
 ## Getting the Required Tokens
@@ -53,6 +60,89 @@ This bot forwards messages from a specific Discord channel to a Telegram chat. I
 3. Visit `https://api.telegram.org/bot<YourBOTToken>/getUpdates`
 4. Look for the "chat" object in the response
 5. The "id" field is your chat ID
+
+## Auto React Configuration
+
+The bot can automatically react to game-related messages in the target Discord channel with a specified emoji:
+
+- `AUTO_REACT_ENABLED`: Enable/disable auto react (default: true)
+- `AUTO_REACT_EMOJI`: Emoji to react with (default: ⚔️)
+- `AUTO_REACT_DELAY_MIN`: Minimum delay in milliseconds (default: 1000ms)
+- `AUTO_REACT_DELAY_MAX`: Maximum delay in milliseconds (default: 3000ms)
+
+### Supported Game Messages:
+- **Rumble Royale embeds**: Game announcements, session starts, hosted games
+- **Game descriptions**: Messages containing "Starting in", "Jump!", "Feeding wolves"
+- **Game fields**: Messages with participants, prizes, gold per kill info
+- **Text messages**: Messages containing "rumble royale", "game", "join"
+
+### Example:
+```
+AUTO_REACT_ENABLED=true
+AUTO_REACT_EMOJI=⚔️
+AUTO_REACT_DELAY_MIN=1000
+AUTO_REACT_DELAY_MAX=4000
+```
+
+This will automatically react with ⚔️ to game-related messages with a random delay between 1-4 seconds to appear more natural.
+
+## Multi-Account Setup
+
+You can run multiple Discord accounts simultaneously to auto-react to games. This is useful for increasing reaction speed and having backup accounts.
+
+**Note**: Multi-account mode focuses purely on auto-reacting. For Telegram message forwarding, use the single account mode (`npm start`).
+
+### Configuration for Multiple Accounts:
+
+Create a `.env` file with multiple account tokens:
+
+```
+# Number of accounts to use
+NUM_ACCOUNTS=3
+
+# Account tokens (add as many as you have)
+DISCORD_TOKEN_1=your_first_account_token
+DISCORD_TOKEN_2=your_second_account_token  
+DISCORD_TOKEN_3=your_third_account_token
+
+# Shared configuration
+DISCORD_CHANNEL_ID=your_channel_id_here
+
+# Auto React Configuration (applies to all accounts)
+AUTO_REACT_ENABLED=true
+AUTO_REACT_DELAY_MIN=1000
+AUTO_REACT_DELAY_MAX=5000
+
+# Optional: Different emojis per account
+AUTO_REACT_EMOJI_1=⚔️
+AUTO_REACT_EMOJI_2=🗡️
+AUTO_REACT_EMOJI_3=🏹
+
+# Optional: Different delays per account
+AUTO_REACT_DELAY_MIN_1=1000
+AUTO_REACT_DELAY_MAX_1=3000
+AUTO_REACT_DELAY_MIN_2=2000
+AUTO_REACT_DELAY_MAX_2=4000
+AUTO_REACT_DELAY_MIN_3=1500
+AUTO_REACT_DELAY_MAX_3=3500
+```
+
+### Running Multi-Account Mode:
+
+```bash
+# Development mode
+npm run multi:dev
+
+# Production mode  
+npm run multi
+```
+
+### Features:
+- **Multiple accounts**: Each account reacts independently
+- **Different emojis**: Each account can use different reaction emojis
+- **Staggered delays**: Different delay ranges to avoid simultaneous reactions
+- **Pure auto-react**: Only handles reactions, no Telegram forwarding
+- **Error isolation**: If one account fails, others continue working
 
 ## Running the Bot
 
@@ -80,4 +170,4 @@ The bot includes comprehensive error handling for:
 - Telegram API errors
 - Message processing errors
 
-All errors are logged to the console for debugging purposes. 
+All errors are logged to the console for debugging purposes.
