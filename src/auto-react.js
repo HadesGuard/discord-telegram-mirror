@@ -1,5 +1,7 @@
 require('dotenv').config();
 const { Client } = require('discord.js-selfbot-v13');
+const { SocksProxyAgent } = require('socks-proxy-agent');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 
 // Multi-account configuration
 const accounts = [];
@@ -11,6 +13,7 @@ for (let i = 1; i <= numAccounts; i++) {
         id: i,
         token: process.env[`DISCORD_TOKEN_${i}`],
         channelId: process.env.DISCORD_CHANNEL_ID,
+        proxy: process.env[`PROXY_${i}`] || process.env.PROXY, // Individual or shared proxy
         autoReact: {
             enabled: process.env.AUTO_REACT_ENABLED !== 'false',
             emoji: process.env[`AUTO_REACT_EMOJI_${i}`] || process.env.AUTO_REACT_EMOJI || '⚔️',
@@ -25,6 +28,27 @@ for (let i = 1; i <= numAccounts; i++) {
 }
 
 console.log(`Loaded ${accounts.length} accounts for auto-reacting`);
+
+// Function to create proxy agent based on proxy URL
+function createProxyAgent(proxyUrl) {
+    if (!proxyUrl) return null;
+    
+    try {
+        const url = new URL(proxyUrl);
+        
+        if (url.protocol === 'socks5:' || url.protocol === 'socks4:') {
+            return new SocksProxyAgent(proxyUrl);
+        } else if (url.protocol === 'http:' || url.protocol === 'https:') {
+            return new HttpsProxyAgent(proxyUrl);
+        } else {
+            console.error(`Unsupported proxy protocol: ${url.protocol}`);
+            return null;
+        }
+    } catch (error) {
+        console.error(`Invalid proxy URL: ${proxyUrl}`, error.message);
+        return null;
+    }
+}
 
 // Auto react function for specific account
 async function addAutoReact(message, accountConfig, client) {
@@ -76,7 +100,8 @@ async function addAutoReact(message, accountConfig, client) {
 const clients = [];
 
 accounts.forEach((accountConfig, index) => {
-    const client = new Client({
+    // Create client options
+    const clientOptions = {
         checkUpdate: false,
         autoRedeemNitro: false,
         patchVoice: false,
@@ -87,7 +112,24 @@ accounts.forEach((accountConfig, index) => {
                 device: 'Android'
             }
         }
-    });
+    };
+    
+    // Add proxy if configured for this account
+    if (accountConfig.proxy) {
+        const proxyAgent = createProxyAgent(accountConfig.proxy);
+        if (proxyAgent) {
+            clientOptions.proxy = accountConfig.proxy;
+            clientOptions.ws.agent = proxyAgent;
+            
+            // Determine proxy type for logging
+            const proxyType = accountConfig.proxy.startsWith('socks') ? 'SOCKS' : 'HTTP';
+            console.log(`Account ${accountConfig.id}: Using ${proxyType} proxy ${accountConfig.proxy}`);
+        } else {
+            console.error(`Account ${accountConfig.id}: Failed to create proxy agent for ${accountConfig.proxy}`);
+        }
+    }
+    
+    const client = new Client(clientOptions);
 
     client.on('ready', async () => {
         console.log(`Account ${accountConfig.id}: Logged in as ${client.user.username}`);

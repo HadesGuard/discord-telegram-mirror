@@ -125,6 +125,13 @@ AUTO_REACT_DELAY_MIN_2=2000
 AUTO_REACT_DELAY_MAX_2=4000
 AUTO_REACT_DELAY_MIN_3=1500
 AUTO_REACT_DELAY_MAX_3=3500
+
+# Optional: Proxy settings (HTTP/HTTPS/SOCKS4/SOCKS5)
+PROXY=socks5://127.0.0.1:1080
+# Or individual proxies per account (mix different types)
+PROXY_1=http://proxy1.example.com:8080
+PROXY_2=https://proxy2.example.com:8080
+PROXY_3=socks5://proxy3.example.com:1080
 ```
 
 ### Running Multi-Account Mode:
@@ -141,8 +148,20 @@ npm run multi
 - **Multiple accounts**: Each account reacts independently
 - **Different emojis**: Each account can use different reaction emojis
 - **Staggered delays**: Different delay ranges to avoid simultaneous reactions
+- **Multiple proxy types**: Supports HTTP, HTTPS, SOCKS4, and SOCKS5 proxies
+- **Individual proxies**: Each account can use different proxy servers
 - **Pure auto-react**: Only handles reactions, no Telegram forwarding
 - **Error isolation**: If one account fails, others continue working
+
+### Supported Proxy Types:
+- **HTTP**: `http://proxy.example.com:8080`
+- **HTTPS**: `https://proxy.example.com:8080`
+- **SOCKS4**: `socks4://proxy.example.com:1080`
+- **SOCKS5**: `socks5://proxy.example.com:1080`
+
+With authentication:
+- **HTTP with auth**: `http://username:password@proxy.example.com:8080`
+- **SOCKS5 with auth**: `socks5://username:password@proxy.example.com:1080`
 
 ## Running the Bot
 
