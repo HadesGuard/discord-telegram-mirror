@@ -35,18 +35,28 @@ const deviceConfigs = [
         browser: 'Chrome',
         os: 'Windows',
         device: '',
-        browser_user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        browser_version: '120.0.0.0',
+        browser_user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        browser_version: '122.0.0.0',
         os_version: '10',
         screen_width: 1920,
         screen_height: 1080
     },
     {
+        browser: 'Chrome',
+        os: 'Windows',
+        device: '',
+        browser_user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        browser_version: '121.0.0.0',
+        os_version: '10',
+        screen_width: 2560,
+        screen_height: 1440
+    },
+    {
         browser: 'Firefox',
         os: 'Windows',
         device: '',
-        browser_user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
-        browser_version: '121.0',
+        browser_user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0',
+        browser_version: '123.0',
         os_version: '10',
         screen_width: 1366,
         screen_height: 768
@@ -55,8 +65,8 @@ const deviceConfigs = [
         browser: 'Chrome',
         os: 'Mac OS X',
         device: '',
-        browser_user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        browser_version: '120.0.0.0',
+        browser_user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        browser_version: '122.0.0.0',
         os_version: '10.15.7',
         screen_width: 2560,
         screen_height: 1440
@@ -65,8 +75,8 @@ const deviceConfigs = [
         browser: 'Safari',
         os: 'Mac OS X',
         device: '',
-        browser_user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
-        browser_version: '17.1',
+        browser_user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.3 Safari/605.1.15',
+        browser_version: '17.3',
         os_version: '10.15.7',
         screen_width: 1440,
         screen_height: 900
@@ -75,9 +85,29 @@ const deviceConfigs = [
         browser: 'Chrome',
         os: 'Linux',
         device: '',
-        browser_user_agent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        browser_version: '120.0.0.0',
+        browser_user_agent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        browser_version: '122.0.0.0',
         os_version: '',
+        screen_width: 1920,
+        screen_height: 1080
+    },
+    {
+        browser: 'Firefox',
+        os: 'Mac OS X',
+        device: '',
+        browser_user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:123.0) Gecko/20100101 Firefox/123.0',
+        browser_version: '123.0',
+        os_version: '10.15',
+        screen_width: 1680,
+        screen_height: 1050
+    },
+    {
+        browser: 'Edge',
+        os: 'Windows',
+        device: '',
+        browser_user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0',
+        browser_version: '122.0.0.0',
+        os_version: '10',
         screen_width: 1920,
         screen_height: 1080
     }

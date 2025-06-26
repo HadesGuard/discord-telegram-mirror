@@ -167,10 +167,10 @@ With authentication:
 
 ### Realistic Device Simulation:
 Each account automatically gets assigned a random, realistic device configuration:
-- **Browsers**: Chrome, Firefox, Safari
-- **Operating Systems**: Windows 10/11, macOS, Linux
-- **Screen Resolutions**: 1920x1080, 1366x768, 2560x1440, 1440x900
-- **User Agents**: Real browser user agent strings
+- **Browsers**: Chrome 121-122, Firefox 123, Safari 17.3, Edge 122 (latest versions)
+- **Operating Systems**: Windows 10/11, macOS Sonoma, Linux
+- **Screen Resolutions**: 1920x1080, 1366x768, 2560x1440, 1440x900, 1680x1050
+- **User Agents**: Latest real browser user agent strings (updated 2024)
 - **Build Numbers**: Randomized Discord client build numbers
 - **Human Behavior**: 10% chance of extra delay (1-4 seconds) to simulate human hesitation
 
@@ -179,6 +179,7 @@ Each account automatically gets assigned a random, realistic device configuratio
 Account 1: Logged in as User1 (Chrome on Windows)
 Account 2: Logged in as User2 (Firefox on Windows)
 Account 3: Logged in as User3 (Safari on Mac OS X)
+Account 4: Logged in as User4 (Edge on Windows)
 Account 1: Adding human-like extra delay (+2341ms)
 ⚔️ Account 1 (User1) reacted with ⚔️ (delay: 3847ms)
 ```
