@@ -141,7 +141,6 @@ function createProxyAgent(proxyUrl) {
 
 // Auto react function for specific account
 async function addAutoReact(message, accountConfig, client) {
-    console.log("addAutoReact", accountConfig.autoReact.enabled);
     if (!accountConfig.autoReact.enabled) return;
     
     // Only react to game-related messages
@@ -150,7 +149,7 @@ async function addAutoReact(message, accountConfig, client) {
             (embed.title && (
                 embed.title.includes('Rumble Royale') ||
                 embed.title.includes('Started a new Rumble Royale session') ||
-                embed.title.startsWith('Rumble Royale hosted by')
+                embed.title.includes('Rumble Royale hosted by')
             )) ||
             (embed.description && (
                 embed.description.includes('Starting in') ||
@@ -169,7 +168,12 @@ async function addAutoReact(message, accountConfig, client) {
             message.content.toLowerCase().includes('join')
         ));
     
-    if (!isGameMessage) return;
+    if (!isGameMessage) {
+        console.log("❌ Not a game message - skipping reaction");
+        return;
+    }
+    
+    console.log("✅ Game message detected - will react!");
     
     try {
         // Add human-like random delay patterns
