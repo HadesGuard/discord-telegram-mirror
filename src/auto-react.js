@@ -7,6 +7,35 @@ const { HttpsProxyAgent } = require('https-proxy-agent');
 const accounts = [];
 const numAccounts = parseInt(process.env.NUM_ACCOUNTS) || 1;
 
+// Quản lý pending reactions để tránh spam
+const pendingReactions = new Map(); // messageId -> { timer, accountId }
+
+// Cleanup old timers mỗi 10 phút
+setInterval(() => {
+    const now = Date.now();
+    const maxAge = 6 * 60 * 1000; // 6 phút (1 phút buffer)
+    let cleanedCount = 0;
+    
+    for (const [key, data] of pendingReactions.entries()) {
+        if (now - data.startTime > maxAge) {
+            clearTimeout(data.timer);
+            pendingReactions.delete(key);
+            cleanedCount++;
+        }
+    }
+    
+    if (cleanedCount > 0) {
+        console.log(`🧹 Cleaned up ${cleanedCount} old timers. Active timers: ${pendingReactions.size}`);
+    }
+}, 10 * 60 * 1000);
+
+// Log trạng thái mỗi phút
+setInterval(() => {
+    if (pendingReactions.size > 0) {
+        console.log(`📊 Currently monitoring ${pendingReactions.size} messages for reactions`);
+    }
+}, 60 * 1000);
+
 // Load account configurations
 for (let i = 1; i <= numAccounts; i++) {
     const accountConfig = {
@@ -143,55 +172,155 @@ function createProxyAgent(proxyUrl) {
 async function addAutoReact(message, accountConfig, client) {
     if (!accountConfig.autoReact.enabled) return;
     
-    // Only react to game-related messages
-    const isGameMessage = 
-        (message.embeds.length > 0 && message.embeds.some(embed => 
-            (embed.title && (
-                embed.title.includes('Rumble Royale') ||
-                embed.title.includes('Started a new Rumble Royale session') ||
-                embed.title.includes('Rumble Royale hosted by')
-            )) ||
-            (embed.description && (
-                embed.description.includes('Starting in') ||
-                embed.description.includes('Jump!') ||
-                embed.description.includes('Feeding wolves')
-            )) ||
-            (embed.fields && embed.fields.some(field => 
-                field.name.includes('participants') ||
-                field.name.includes('Prize') ||
-                field.name.includes('Gold Per Kill')
-            ))
-        )) ||
-        (message.content && (
-            message.content.toLowerCase().includes('rumble royale') ||
-            message.content.toLowerCase().includes('game') ||
-            message.content.toLowerCase().includes('join')
-        ));
+    // Only react to Rumble Royale join messages (cả embed cũ và kiểu mới không embed)
+    const isGameMessage = (
+        // Kiểu cũ: embed join game
+        (message.embeds.length > 0 && message.embeds.some(embed =>
+            embed.title &&
+            embed.title.includes('Rumble Royale hosted by') &&
+            embed.description &&
+            embed.description.includes('Click the emoji below to join')
+        ))
+        ||
+        // Kiểu mới: không embed, interaction type APPLICATION_COMMAND, author là Rumble Royale, content rỗng
+        (
+            message.author &&
+            message.author.username === 'Rumble Royale' &&
+            message.content === '' &&
+            message.interaction &&
+            message.interaction.type === 'APPLICATION_COMMAND' &&
+            message.interaction.commandName === 'battle'
+        )
+    );
     
     if (!isGameMessage) {
         console.log("❌ Not a game message - skipping reaction");
+        console.log(`📝 Debug: author=${message.author?.username}, content="${message.content}", embeds=${message.embeds.length}`);
         return;
     }
     
     console.log("✅ Game message detected - will react!");
     
     try {
-        // Add human-like random delay patterns
-        let delay = Math.floor(Math.random() * (accountConfig.autoReact.delayMax - accountConfig.autoReact.delayMin + 1)) + accountConfig.autoReact.delayMin;
-        
-        // Occasionally add extra delay to simulate human behavior (10% chance)
-        if (Math.random() < 0.1) {
-            const extraDelay = Math.floor(Math.random() * 3000) + 1000; // 1-4 seconds extra
-            delay += extraDelay;
-            console.log(`Account ${accountConfig.id}: Adding human-like extra delay (+${extraDelay}ms)`);
+        // Kiểm tra xem message đã có reaction nào chưa
+        if (message.reactions.cache.size > 0) {
+            // Có reaction rồi → react ngay với emoji đầu tiên
+            const firstReaction = message.reactions.cache.first();
+            const emojiToReact = firstReaction.emoji;
+            console.log(`🎯 Found existing reaction: ${firstReaction.emoji.name || firstReaction.emoji}, will use this`);
+            
+            // Add human-like random delay patterns
+            let delay = Math.floor(Math.random() * (accountConfig.autoReact.delayMax - accountConfig.autoReact.delayMin + 1)) + accountConfig.autoReact.delayMin;
+            
+            // Occasionally add extra delay to simulate human behavior (10% chance)
+            if (Math.random() < 0.1) {
+                const extraDelay = Math.floor(Math.random() * 3000) + 1000; // 1-4 seconds extra
+                delay += extraDelay;
+                console.log(`Account ${accountConfig.id}: Adding human-like extra delay (+${extraDelay}ms)`);
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, delay));
+            console.log(`⏰ Account ${accountConfig.id} delay: ${delay}ms for ${emojiToReact.name || emojiToReact}`);
+            
+            // React with the emoji
+            await message.react(emojiToReact);
+            console.log(`⚔️ Account ${accountConfig.id} (${client.user.username}) reacted with ${emojiToReact.name || emojiToReact} (delay: ${delay}ms)`);
+            
+        } else {
+            // Chưa có reaction → kiểm tra liên tục trong vòng 5 phút
+            const messageKey = `${message.id}_${accountConfig.id}`;
+            
+            // Kiểm tra xem message này đã có timer chưa
+            if (pendingReactions.has(messageKey)) {
+                console.log(`⚠️ Account ${accountConfig.id}: Already monitoring message ${message.id}, skipping...`);
+                return;
+            }
+            
+            console.log(`⏳ Account ${accountConfig.id}: No reactions yet, checking every 10 seconds for 5 minutes...`);
+            
+            const startTime = Date.now();
+            const maxWaitTime = 5 * 60 * 1000; // 5 phút
+            const checkInterval = 10 * 1000; // 10 giây
+            let hasReacted = false;
+            
+            const checkForReactions = async () => {
+                try {
+                    if (hasReacted) {
+                        // Cleanup khi đã react
+                        pendingReactions.delete(messageKey);
+                        return;
+                    }
+                    
+                    const elapsedTime = Date.now() - startTime;
+                    
+                    if (elapsedTime >= maxWaitTime) {
+                        // Hết 5 phút → dùng default emoji
+                        console.log(`💭 Account ${accountConfig.id}: 5 minutes passed, using default emoji: ${accountConfig.autoReact.emoji}`);
+                        
+                        const delay = Math.floor(Math.random() * (accountConfig.autoReact.delayMax - accountConfig.autoReact.delayMin + 1)) + accountConfig.autoReact.delayMin;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        
+                        await message.react(accountConfig.autoReact.emoji);
+                        console.log(`⚔️ Account ${accountConfig.id} (${client.user.username}) reacted with default ${accountConfig.autoReact.emoji} after 5min (delay: ${delay}ms)`);
+                        hasReacted = true;
+                        pendingReactions.delete(messageKey);
+                        return;
+                    }
+                    
+                    // Fetch lại message để kiểm tra reactions mới
+                    const freshMessage = await message.fetch();
+                    
+                    if (freshMessage.reactions.cache.size > 0) {
+                        // Tìm thấy reaction → react ngay
+                        const firstReaction = freshMessage.reactions.cache.first();
+                        const emojiToReact = firstReaction.emoji;
+                        console.log(`🎯 Account ${accountConfig.id}: Found reaction after ${Math.round(elapsedTime/1000)}s: ${firstReaction.emoji.name || firstReaction.emoji}`);
+                        
+                        const delay = Math.floor(Math.random() * (accountConfig.autoReact.delayMax - accountConfig.autoReact.delayMin + 1)) + accountConfig.autoReact.delayMin;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        
+                        await freshMessage.react(emojiToReact);
+                        console.log(`⚔️ Account ${accountConfig.id} (${client.user.username}) reacted with ${emojiToReact.name || emojiToReact} (delay: ${delay}ms)`);
+                        hasReacted = true;
+                        pendingReactions.delete(messageKey);
+                        return;
+                    }
+                    
+                    // Chưa có reaction → đợi và kiểm tra lại
+                    console.log(`🔄 Account ${accountConfig.id}: Still no reactions after ${Math.round(elapsedTime/1000)}s, checking again...`);
+                    const nextTimer = setTimeout(checkForReactions, checkInterval);
+                    
+                    // Update timer trong Map
+                    pendingReactions.set(messageKey, { 
+                        timer: nextTimer, 
+                        accountId: accountConfig.id,
+                        startTime: startTime
+                    });
+                    
+                } catch (retryError) {
+                    console.error(`Account ${accountConfig.id} error during retry: ${retryError.message}`);
+                    // Thử lại sau 10 giây
+                    if (!hasReacted && (Date.now() - startTime) < maxWaitTime) {
+                        const retryTimer = setTimeout(checkForReactions, checkInterval);
+                        pendingReactions.set(messageKey, { 
+                            timer: retryTimer, 
+                            accountId: accountConfig.id,
+                            startTime: startTime
+                        });
+                    } else {
+                        pendingReactions.delete(messageKey);
+                    }
+                }
+            };
+            
+            // Bắt đầu kiểm tra sau 10 giây
+            const initialTimer = setTimeout(checkForReactions, checkInterval);
+            pendingReactions.set(messageKey, { 
+                timer: initialTimer, 
+                accountId: accountConfig.id,
+                startTime: startTime
+            });
         }
-        
-        await new Promise(resolve => setTimeout(resolve, delay));
-        console.log("delay", delay);
-        
-        // React with the configured emoji
-        await message.react(accountConfig.autoReact.emoji);
-        console.log(`⚔️ Account ${accountConfig.id} (${client.user.username}) reacted with ${accountConfig.autoReact.emoji} (delay: ${delay}ms)`);
         
     } catch (error) {
         console.error(`Account ${accountConfig.id} failed to react: ${error.message}`);
